@@ -14,11 +14,33 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 
+	"code.google.com/p/freetype-go/freetype"
 	"github.com/jzelinskie/reddit"
-	"github.com/nfnt/resize"
+	"github.com/quirkey/magick"
 )
+
+var resizeAll = "256x256"
+var cropAll = ""
+
+func setText(newImage image.Image, newText string) image.Image {
+	fontBytes, _ := ioutil.ReadFile("./FreeMonoBold.ttf")
+	font, _ := freetype.ParseFont(fontBytes)
+	rgba := image.NewRGBA(image.Rect(0, 0, newImage.Bounds().Max.X, newImage.Bounds().Max.Y))
+	draw.Draw(rgba, rgba.Bounds(), newImage, image.ZP, draw.Src)
+	textContext := freetype.NewContext()
+	textContext.SetFontSize(32)
+	textContext.SetFont(font)
+	textContext.SetClip(newImage.Bounds())
+	textContext.SetDst(rgba)
+	textContext.SetSrc(image.White)
+	pt := freetype.Pt(32, 32+int(textContext.PointToFix32(8)>>8))
+	text := newText
+	textContext.DrawString(text, pt)
+	return rgba
+}
 
 type squareMask struct {
 	p image.Point
@@ -63,11 +85,12 @@ func main() {
 	// Get reddit's default frontpage
 
 	// Get our own personal frontpage
-	submissions, _ := session.SubredditSubmissions("aww")
+	submissions, _ := session.SubredditSubmissions("cats")
+	//	subRedditInfo, _ := session.AboutSubreddit("aww")
+	//fmt.Println(subRedditInfo)
 
 	for sub := range submissions {
 		if submissions[sub].Domain == "imgur.com" || submissions[sub].Domain == "i.imgur.com" {
-			fmt.Println(submissions[sub].Score)
 			_, err := url.Parse(submissions[sub].URL)
 			imgType := ""
 			if err != nil {
@@ -88,31 +111,82 @@ func main() {
 							} else {
 								fmt.Println(len(data))
 								if strings.ToLower(contentType[1]) == "jpg" || strings.ToLower(contentType[1]) == "jpeg" {
-									image, err := jpeg.Decode(bytes.NewReader(data))
+									newImage, err := magick.NewFromBlob(data, "jpg")
 									if err != nil {
 										fmt.Println(err)
 									} else {
 										imgType = "jpg"
-										newImage := resize.Thumbnail(128, 128, image, resize.NearestNeighbor)
-										images = append(images, ImageData{Image: newImage, Score: submissions[sub].Score})
+										newImage.Resize(resizeAll)
+										newImage.Crop(cropAll)
+										newImage.Strip()
+										imageBlob, err := newImage.ToBlob("jpg")
+										if err != nil {
+											fmt.Println(err)
+										} else {
+											fontBytes, err := ioutil.ReadFile("./FreeMonoBold.ttf")
+											font, err := freetype.ParseFont(fontBytes)
+											finalImage, err := jpeg.Decode(bytes.NewReader(imageBlob))
+											rgba := image.NewRGBA(image.Rect(0, 0, finalImage.Bounds().Max.X, finalImage.Bounds().Max.Y))
+											draw.Draw(rgba, rgba.Bounds(), finalImage, image.ZP, draw.Src)
+											textContext := freetype.NewContext()
+											textContext.SetFontSize(32)
+											textContext.SetFont(font)
+											textContext.SetClip(finalImage.Bounds())
+											textContext.SetDst(rgba)
+											textContext.SetSrc(image.White)
+											pt := freetype.Pt(32, 32+int(textContext.PointToFix32(8)>>8))
+											text := strconv.FormatInt(int64(submissions[sub].Score), 10)
+											textContext.DrawString(text, pt)
+
+											if err != nil {
+
+											} else {
+												jpeg.Encode(bufio.NewWriter(bytes.NewBuffer([]byte{})), rgba, nil)
+												images = append(images, ImageData{Image: rgba, Score: submissions[sub].Score})
+											}
+										}
 									}
 								} else if strings.ToLower(contentType[1]) == "png" {
-									image, err := png.Decode(bytes.NewReader(data))
+									newImage, err := magick.NewFromBlob(data, "png")
 									if err != nil {
 										fmt.Println(err)
 									} else {
 										imgType = "png"
-										newImage := resize.Thumbnail(128, 128, image, resize.NearestNeighbor)
-										images = append(images, ImageData{Image: newImage, Score: submissions[sub].Score})
+										newImage.Resize(resizeAll)
+										newImage.Crop(cropAll)
+										newImage.Strip()
+										imageBlob, err := newImage.ToBlob("png")
+										if err != nil {
+											fmt.Println(err)
+										} else {
+											finalImage, err := png.Decode(bytes.NewReader(imageBlob))
+											if err != nil {
+
+											} else {
+												images = append(images, ImageData{Image: finalImage, Score: submissions[sub].Score})
+											}
+										}
 									}
 								} else if strings.ToLower(contentType[1]) == "gif" {
-									image, err := gif.Decode(bytes.NewReader(data))
+									newImage, err := magick.NewFromBlob(data, "gif")
 									if err != nil {
 										fmt.Println(err)
 									} else {
 										imgType = "gif"
-										newImage := resize.Thumbnail(128, 128, image, resize.NearestNeighbor)
-										images = append(images, ImageData{Image: newImage, Score: submissions[sub].Score})
+										newImage.Resize(resizeAll)
+										newImage.Crop(cropAll)
+										newImage.Strip()
+										imageBlob, err := newImage.ToBlob("png")
+										if err != nil {
+											fmt.Println(err)
+										} else {
+											finalImage, err := gif.Decode(bytes.NewReader(imageBlob))
+											if err != nil {
+
+											} else {
+												images = append(images, ImageData{Image: finalImage, Score: submissions[sub].Score})
+											}
+										}
 									}
 								}
 								fmt.Println(imgType)
@@ -139,18 +213,18 @@ func main() {
 	heightStart := 0
 	for item := range images {
 		fmt.Println(widthStart, heightStart)
+		imgBounds := images[item].Image.Bounds()
+		if widthStart-imgBounds.Max.X <= maxWidth {
+			widthStart = 0
+			heightStart = heightStart - 128
+		}
 		draw.Draw(finalImage, finalImage.Bounds(), images[item].Image, image.Point{X: widthStart, Y: heightStart}, draw.Src)
-		widthStart = widthStart - 128
+		widthStart = widthStart - imgBounds.Max.X
 		if widthStart <= maxWidth {
 			widthStart = 0
 			heightStart = heightStart - 128
 		}
 	}
-	//draw.Draw(finalImage, finalImage.Bounds(), images[2].Image, image.Point{X: -128, Y: 0}, draw.Src)
-	//draw.Draw(finalImage, finalImage.Bounds(), images[3].Image, image.Point{X: -256, Y: 0}, draw.Src)
-
-	//draw.DrawMask(finalImage, finalImage.Bounds(), images[1].Image, image.ZP, images[1].Image, image.ZP, draw.Over)
-	//draw.DrawMask(finalImage, finalImage.Bounds(), images[2].Image, image.ZP, NewSquareMask(128, 256), image.ZP, draw.Over)
 
 	imageFile, _ := os.Create("FinalImage.png")
 	defer imageFile.Close()
