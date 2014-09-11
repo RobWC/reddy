@@ -22,7 +22,7 @@ func (ig *ImageGenerator) CreateSquare(width int, heigth int) {
 	finalImage := image.NewRGBA(image.Rect(0, 0, width, heigth))
 	//draw.Draw(finalImage, finalImage.Bounds(), images[1].Image, image.ZP, draw.Src)
 	//write out all images
-	widthStart := -512
+	widthStart := 0
 	heightStart := 0
 	for item := range ig.images {
 		fmt.Println(widthStart, heightStart)
@@ -31,7 +31,7 @@ func (ig *ImageGenerator) CreateSquare(width int, heigth int) {
 			widthStart = 0
 			heightStart = heightStart - 128
 		}
-		draw.Draw(finalImage, finalImage.Bounds(), ig.images[item].Image, image.Point{X: widthStart - widthStart - imgBounds.Max.X, Y: heightStart}, draw.Src)
+		draw.Draw(finalImage, finalImage.Bounds(), ig.images[item].Image, image.Point{X: widthStart, Y: heightStart}, draw.Src)
 		widthStart = widthStart - imgBounds.Max.X
 		if widthStart <= width {
 			widthStart = 0

@@ -39,6 +39,10 @@ func (pp *PicturePoacher) GetSubredditInfo() {
 	}
 }
 
+func (pp *PicturePoacher) writeImageScore() {
+
+}
+
 func (pp *PicturePoacher) FetchSubmissionImages() []ImageData {
 	var resizeAll = "256x256"
 	var cropAll = ""
@@ -46,8 +50,7 @@ func (pp *PicturePoacher) FetchSubmissionImages() []ImageData {
 	images := make([]ImageData, 0)
 
 	submissions, _ := pp.Session.SubredditSubmissions(pp.Subreddit)
-	//	subRedditInfo, _ := session.AboutSubreddit("aww")
-	//fmt.Println(subRedditInfo)
+
 	for sub := range submissions {
 		if submissions[sub].Domain == "imgur.com" || submissions[sub].Domain == "i.imgur.com" {
 			_, err := url.Parse(submissions[sub].URL)
