@@ -1,4 +1,4 @@
-package reddy
+package main
 
 import "image"
 

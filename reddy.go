@@ -1,4 +1,4 @@
-package reddy
+package main
 
 import (
 	"bufio"
@@ -16,18 +16,18 @@ import (
 	"strings"
 
 	"code.google.com/p/freetype-go/freetype"
-	"github.com/jzelinskie/reddit"
+	"github.com/jzelinskie/geddit"
 	"github.com/quirkey/magick"
 )
 
-func NewPicturePoacher(subreddit string, session *reddit.LoginSession) *PicturePoacher {
+func NewPicturePoacher(subreddit string, session *geddit.LoginSession) *PicturePoacher {
 	return &PicturePoacher{Subreddit: subreddit, Session: session}
 }
 
 type PicturePoacher struct {
 	Subreddit            string
-	Session              *reddit.LoginSession
-	SubredditInfo        *reddit.Subreddit
+	Session              *geddit.LoginSession
+	SubredditInfo        *geddit.Subreddit
 	AcceptedImageDomains []string
 }
 

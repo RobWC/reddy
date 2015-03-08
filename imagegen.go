@@ -1,4 +1,4 @@
-package reddy
+package main
 
 import (
 	"bufio"
@@ -29,13 +29,13 @@ func (ig *ImageGenerator) CreateSquare(width int, heigth int) {
 		imgBounds := ig.images[item].Image.Bounds()
 		if widthStart-imgBounds.Max.X <= width {
 			widthStart = 0
-			heightStart = heightStart - 128
+			heightStart = heightStart - imgBounds.Max.X
 		}
 		draw.Draw(finalImage, finalImage.Bounds(), ig.images[item].Image, image.Point{X: widthStart, Y: heightStart}, draw.Src)
 		widthStart = widthStart - imgBounds.Max.X
 		if widthStart <= width {
 			widthStart = 0
-			heightStart = heightStart - 128
+			heightStart = heightStart - imgBounds.Max.X
 		}
 	}
 	ig.finalImage = finalImage

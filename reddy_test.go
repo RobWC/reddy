@@ -1,16 +1,33 @@
-package reddy
+package main
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
-	"github.com/jzelinskie/reddit"
+	"github.com/jzelinskie/geddit"
 )
 
-func TestBasicSanity(t *testing.T) {
-	session, _ := reddit.NewLoginSession(
+func TestBasicSanityPics(t *testing.T) {
+	session, _ := geddit.NewLoginSession(
 		"MrCrapperReddy",
-		"eatTICKLE!@#",
+		"XXXXXXX",
+		"Reddy the Reddit Reader/1.0",
+	)
+	pp := NewPicturePoacher("pics", session)
+	pp.GetSubredditInfo()
+	images := pp.FetchSubmissionImages()
+	fmt.Println(len(images))
+	ig := NewImageGenerator(images)
+	ig.CreateSquare(-768, -768)
+	ig.SaveImage("testimage-pics.png")
+	log.Println("Saving image file...pics")
+}
+
+func TestBasicSanityAww(t *testing.T) {
+	session, _ := geddit.NewLoginSession(
+		"MrCrapperReddy",
+		"XXXXXXX",
 		"Reddy the Reddit Reader/1.0",
 	)
 	pp := NewPicturePoacher("aww", session)
@@ -18,6 +35,7 @@ func TestBasicSanity(t *testing.T) {
 	images := pp.FetchSubmissionImages()
 	fmt.Println(len(images))
 	ig := NewImageGenerator(images)
-	ig.CreateSquare(-1024, -1024)
-	ig.SaveImage("testimage.png")
+	ig.CreateSquare(-768, -768)
+	ig.SaveImage("testimage-aww.png")
+	log.Println("Saving image file...aww")
 }

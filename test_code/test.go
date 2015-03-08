@@ -18,7 +18,7 @@ import (
 	"strings"
 
 	"code.google.com/p/freetype-go/freetype"
-	"github.com/jzelinskie/reddit"
+	"github.com/jzelinskie/geddit"
 	"github.com/quirkey/magick"
 )
 
@@ -76,9 +76,9 @@ func main() {
 	// Login to reddit
 	images := make([]ImageData, 0)
 
-	session, _ := reddit.NewLoginSession(
+	session, _ := geddit.NewLoginSession(
 		"MrCrapperReddy",
-		"eatTICKLE!@#",
+		"XXX",
 		"Reddy the Reddit Reader/1.0",
 	)
 
